@@ -41,14 +41,8 @@
         </dependency>
 
         <!-- Spring Cloud -->
-        <dependency>
-            <groupId>org.springframework.cloud</groupId>
-            <artifactId>spring-cloud-starter-config</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.cloud</groupId>
-            <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
-        </dependency>
+        <!-- Removed: spring-cloud-starter-config (Config Server not needed in K8s) -->
+        <!-- Removed: spring-cloud-starter-netflix-eureka-client (Using K8s DNS instead) -->
 
         <!-- Third parties -->
         <dependency>

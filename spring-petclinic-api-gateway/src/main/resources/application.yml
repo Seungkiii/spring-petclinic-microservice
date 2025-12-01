@@ -1,8 +1,6 @@
 spring:
   application:
     name: api-gateway
-  config:
-    import: optional:configserver:${CONFIG_SERVER_URL:http://localhost:8888/}
   cloud:
     gateway:
       default-filters:
@@ -17,34 +15,42 @@ spring:
             methods: POST
       routes:
         - id: vets-service
-          uri: lb://vets-service
+          uri: http://vets-service:8080
           predicates:
             - Path=/api/vet/**
           filters:
             - StripPrefix=2
         - id: visits-service
-          uri: lb://visits-service
+          uri: http://visits-service:8080
           predicates:
             - Path=/api/visit/**
           filters:
             - StripPrefix=2
         - id: customers-service
-          uri: lb://customers-service
+          uri: http://customers-service:8080
           predicates:
             - Path=/api/customer/**
           filters:
             - StripPrefix=2
         - id: genai-service
-          uri: lb://genai-service
+          uri: http://genai-service:8080
           predicates:
             - Path=/api/genai/**
           filters:
             - StripPrefix=2
             - CircuitBreaker=name=genaiCircuitBreaker,fallbackUri=/fallback
 
----
-spring:
-  config:
-    activate:
-      on-profile: docker
-    import: configserver:http://config-server:8888
+server:
+  port: 8080
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+    tags:
+      application: ${spring.application.name}

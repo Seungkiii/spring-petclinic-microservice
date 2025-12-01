@@ -5,8 +5,11 @@ spring:
     name: genai-service
   profiles:
     active: production
-  config:
-    import: optional:configserver:${CONFIG_SERVER_URL:http://localhost:8888/},optional:classpath:/creds.yaml
+  datasource:
+    url: jdbc:mysql://${DB_HOST:localhost}:${DB_PORT:3306}/${DB_NAME:petclinic}
+    username: ${DB_USER:root}
+    password: ${DB_PASS:root}
+    driver-class-name: com.mysql.cj.jdbc.Driver
   ai:
     chat:
       client:
@@ -28,6 +31,20 @@ spring:
             temperature: 0.7
             model: gpt-4o-mini
 
+server:
+  port: 8080
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  metrics:
+    export:
+      prometheus:
+        enabled: true
+    tags:
+      application: ${spring.application.name}
 
 logging:
   level:
@@ -37,9 +54,3 @@ logging:
           chat:
             client:
               advisor: DEBUG
----
-spring:
-  config:
-    activate:
-      on-profile: docker
-    import: configserver:http://config-server:8888

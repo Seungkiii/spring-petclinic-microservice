@@ -59,18 +59,10 @@
             <groupId>org.springframework.cloud</groupId>
             <artifactId>spring-cloud-starter-circuitbreaker-reactor-resilience4j</artifactId>
         </dependency>
-        <dependency>
-            <groupId>org.springframework.cloud</groupId>
-            <artifactId>spring-cloud-starter-config</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.cloud</groupId>
-            <artifactId>spring-cloud-starter-netflix-eureka-client</artifactId>
-        </dependency>
-        <dependency>
-            <groupId>org.springframework.cloud</groupId>
-            <artifactId>spring-cloud-starter-gateway</artifactId>
-        </dependency>
+        <!-- Removed: spring-cloud-starter-config (Config Server not needed in K8s) -->
+        <!-- Removed: spring-cloud-starter-netflix-eureka-client (Using K8s DNS instead) -->
+        <!-- Note: spring-cloud-starter-gateway removed - GenAI is a service, not a gateway -->
+
 
         <!-- Third parties-->
         <dependency>

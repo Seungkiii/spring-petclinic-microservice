@@ -1,12 +1,20 @@
 server.port: 8888
+
 spring:
-  cloud:
-    config:
-      server:
-        git:
-          uri: https://github.com/spring-petclinic/spring-petclinic-microservices-config
-          default-label: main
-        # Use the File System Backend to avoid git pulling. Enable "native" profile in the Config Server.
-        native:
-          searchLocations: file:///${GIT_REPO}
+  application:
+    name: config-server
+
+# NOTE: Config Server is NOT NEEDED in Kubernetes
+# K8s ConfigMaps and Secrets provide configuration management
+# This service is deprecated and will be removed in production K8s deployments
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: "*"
+  metrics:
+    export:
+      prometheus:
+        enabled: true
 
