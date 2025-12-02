@@ -1,4 +1,4 @@
-version: '3.8'
+version: "3.8"
 
 services:
   # ===================================
@@ -24,7 +24,17 @@ services:
     networks:
       - petclinic-network
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "petclinic", "-ppetclinic"]
+      test:
+        [
+          "CMD",
+          "mysqladmin",
+          "ping",
+          "-h",
+          "localhost",
+          "-u",
+          "petclinic",
+          "-ppetclinic",
+        ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -57,7 +67,15 @@ services:
     networks:
       - petclinic-network
     healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8080/actuator/health"]
+      test:
+        [
+          "CMD",
+          "wget",
+          "--quiet",
+          "--tries=1",
+          "--spider",
+          "http://localhost:8080/actuator/health",
+        ]
       interval: 30s
       timeout: 5s
       retries: 3
@@ -74,6 +92,9 @@ services:
     build:
       context: .
       dockerfile: spring-petclinic-vets-service/Dockerfile
+      platforms:
+        - "linux/amd64"
+        - "linux/arm64"
     container_name: petclinic-vets-service
     environment:
       # Spring 프로필
@@ -95,7 +116,15 @@ services:
     networks:
       - petclinic-network
     healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8080/actuator/health"]
+      test:
+        [
+          "CMD",
+          "wget",
+          "--quiet",
+          "--tries=1",
+          "--spider",
+          "http://localhost:8080/actuator/health",
+        ]
       interval: 30s
       timeout: 5s
       retries: 3
@@ -111,6 +140,9 @@ services:
     build:
       context: .
       dockerfile: spring-petclinic-visits-service/Dockerfile
+      platforms:
+        - "linux/amd64"
+        - "linux/arm64"
     container_name: petclinic-visits-service
     environment:
       # Spring 프로필
@@ -130,7 +162,15 @@ services:
     networks:
       - petclinic-network
     healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8080/actuator/health"]
+      test:
+        [
+          "CMD",
+          "wget",
+          "--quiet",
+          "--tries=1",
+          "--spider",
+          "http://localhost:8080/actuator/health",
+        ]
       interval: 30s
       timeout: 5s
       retries: 3
@@ -146,6 +186,9 @@ services:
     build:
       context: .
       dockerfile: spring-petclinic-api-gateway/Dockerfile
+      platforms:
+        - "linux/amd64"
+        - "linux/arm64"
     container_name: petclinic-api-gateway
     environment:
       # Spring 프로필
@@ -175,7 +218,15 @@ services:
     networks:
       - petclinic-network
     healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8080/actuator/health"]
+      test:
+        [
+          "CMD",
+          "wget",
+          "--quiet",
+          "--tries=1",
+          "--spider",
+          "http://localhost:8080/actuator/health",
+        ]
       interval: 30s
       timeout: 5s
       retries: 3
@@ -189,6 +240,9 @@ services:
     build:
       context: .
       dockerfile: spring-petclinic-genai-service/Dockerfile
+      platforms:
+        - "linux/amd64"
+        - "linux/arm64"
     container_name: petclinic-genai-service
     environment:
       # Spring 프로필
@@ -212,7 +266,15 @@ services:
     networks:
       - petclinic-network
     healthcheck:
-      test: ["CMD", "wget", "--quiet", "--tries=1", "--spider", "http://localhost:8080/actuator/health"]
+      test:
+        [
+          "CMD",
+          "wget",
+          "--quiet",
+          "--tries=1",
+          "--spider",
+          "http://localhost:8080/actuator/health",
+        ]
       interval: 30s
       timeout: 5s
       retries: 3
@@ -231,10 +293,10 @@ services:
       - ./docker/prometheus/prometheus.yml:/etc/prometheus/prometheus.yml
       - prometheus-data:/prometheus
     command:
-      - '--config.file=/etc/prometheus/prometheus.yml'
-      - '--storage.tsdb.path=/prometheus'
-      - '--web.console.libraries=/usr/share/prometheus/console_libraries'
-      - '--web.console.templates=/usr/share/prometheus/consoles'
+      - "--config.file=/etc/prometheus/prometheus.yml"
+      - "--storage.tsdb.path=/prometheus"
+      - "--web.console.libraries=/usr/share/prometheus/console_libraries"
+      - "--web.console.templates=/usr/share/prometheus/consoles"
     ports:
       - "9090:9090"
     networks:

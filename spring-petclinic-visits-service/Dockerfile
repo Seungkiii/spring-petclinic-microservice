@@ -13,18 +13,17 @@ COPY spring-petclinic-visits-service/pom.xml ./spring-petclinic-visits-service/
 RUN mvn clean package -f spring-petclinic-visits-service/pom.xml -DskipTests
 
 # Stage 2: Runtime Stage
-FROM eclipse-temurin:17-jre-alpine
+FROM eclipse-temurin:17-jre
 
 WORKDIR /app
-
-# Create a non-root user for security
-RUN addgroup -g 1000 spring && adduser -D -u 1000 -G spring spring
 
 # Copy the built jar from builder stage
 COPY --from=builder /app/spring-petclinic-visits-service/target/spring-petclinic-visits-service-*.jar app.jar
 
-# Change ownership to non-root user
-RUN chown -R spring:spring /app
+# Create a non-root user for security and change ownership in one step
+RUN groupadd -g 1001 spring 2>/dev/null || groupadd spring && \
+    useradd -u 1001 -g spring spring 2>/dev/null || useradd -g spring spring && \
+    chown -R spring:spring /app
 
 # Switch to non-root user
 USER spring
