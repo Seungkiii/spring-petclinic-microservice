@@ -15,6 +15,41 @@
 - `${ECR_REGISTRY}`: AWS ECR 레지스트리 URL (예: `123456789012.dkr.ecr.ap-northeast-2.amazonaws.com`)
 - `${RDS_ENDPOINT}`: AWS RDS MySQL 엔드포인트 (예: `your-db.rds.amazonaws.com`)
 
+## 사전 요구사항
+
+배포 전에 다음 사항이 준비되어 있어야 합니다:
+
+### 1. kubectl 및 AWS CLI 설치 확인
+
+```bash
+# kubectl 확인
+kubectl version --client
+
+# AWS CLI 확인
+aws --version
+```
+
+### 2. EKS 클러스터 연결 설정
+
+**중요**: kubectl이 EKS 클러스터에 연결할 수 있도록 kubeconfig를 설정해야 합니다.
+
+```bash
+# EKS 클러스터 이름과 리전 설정
+export CLUSTER_NAME=your-eks-cluster-name
+export AWS_REGION=ap-northeast-2
+
+# kubeconfig 업데이트 (EKS 클러스터 연결)
+aws eks update-kubeconfig --region ${AWS_REGION} --name ${CLUSTER_NAME}
+
+# 연결 확인
+kubectl get nodes
+```
+
+**연결이 안 되는 경우:**
+- EKS 클러스터가 생성되어 있는지 확인
+- Bastion 서버의 IAM 역할/사용자가 EKS 클러스터 접근 권한이 있는지 확인
+- `aws eks list-clusters --region ap-northeast-2` 명령으로 클러스터 목록 확인
+
 ## 배포 방법
 
 ### 1. 환경 변수 설정
@@ -39,31 +74,112 @@ stringData:
 #### 방법 1: 배포 스크립트 사용 (권장)
 
 ```bash
-./k8s/deploy.sh
+# k8s 디렉토리로 이동
+cd k8s
+
+# 배포 실행
+./deploy.sh
 ```
 
-이 스크립트는 `envsubst`를 사용하여 환경 변수를 자동으로 치환합니다.
+이 스크립트는 자동으로 환경 변수를 치환합니다:
+- `envsubst`가 있으면 사용 (권장)
+- 없으면 `sed`를 사용하여 치환
 
-**macOS에서 envsubst 설치:**
+**envsubst 설치 (선택사항, 없어도 동작함):**
+- **macOS**: `brew install gettext`
+- **Ubuntu/Debian**: `sudo apt-get install gettext-base`
+- **RHEL/CentOS**: `sudo yum install gettext`
+
+**Bastion 서버에서 사용 예시:**
 ```bash
-brew install gettext
+# 환경 변수 설정
+export ECR_REGISTRY=206799461964.dkr.ecr.ap-northeast-2.amazonaws.com
+export RDS_ENDPOINT=kdt-final-mysql.cjwmcufdhb4i.ap-northeast-2.rds.amazonaws.com
+
+# 배포 실행
+cd k8s
+./deploy.sh
 ```
 
-#### 방법 2: 수동 배포
+#### 방법 2: 파일별 개별 배포 (간단)
+
+각 파일을 하나씩 직접 apply하는 방법입니다:
 
 ```bash
-# 환경 변수 치환
-export ECR_REGISTRY=123456789012.dkr.ecr.ap-northeast-2.amazonaws.com
-export RDS_ENDPOINT=your-rds-endpoint.rds.amazonaws.com
+# 1. 환경 변수 설정
+export ECR_REGISTRY=206799461964.dkr.ecr.ap-northeast-2.amazonaws.com
+export RDS_ENDPOINT=kdt-final-mysql.cjwmcufdhb4i.ap-northeast-2.rds.amazonaws.com
 
-# 각 파일에 대해 envsubst 실행
+# 2. k8s 디렉토리로 이동
+cd k8s
+
+# 3. 각 파일을 하나씩 apply (순서대로 실행)
+# ConfigMap 배포
+sed "s|\${RDS_ENDPOINT}|${RDS_ENDPOINT}|g" petclinic-config.yaml | kubectl apply -f -
+
+# Secret 배포 (먼저 실제 값으로 수정 필요)
+kubectl apply -f petclinic-secret.yaml
+
+# 각 서비스 배포
+sed "s|\${ECR_REGISTRY}|${ECR_REGISTRY}|g" api-gateway.yaml | kubectl apply -f -
+sed "s|\${ECR_REGISTRY}|${ECR_REGISTRY}|g" customers-service.yaml | kubectl apply -f -
+sed "s|\${ECR_REGISTRY}|${ECR_REGISTRY}|g" vets-service.yaml | kubectl apply -f -
+sed "s|\${ECR_REGISTRY}|${ECR_REGISTRY}|g" visits-service.yaml | kubectl apply -f -
+```
+
+**또는 envsubst가 있는 경우:**
+```bash
 envsubst < petclinic-config.yaml | kubectl apply -f -
-envsubst < petclinic-secret.yaml | kubectl apply -f -
+kubectl apply -f petclinic-secret.yaml
 envsubst < api-gateway.yaml | kubectl apply -f -
 envsubst < customers-service.yaml | kubectl apply -f -
 envsubst < vets-service.yaml | kubectl apply -f -
 envsubst < visits-service.yaml | kubectl apply -f -
 ```
+
+## 데이터베이스 초기화
+
+**중요**: 파드를 배포하기 전에 RDS에 데이터베이스 스키마를 생성해야 합니다.
+
+### 방법 1: 직접 MySQL 클라이언트 사용
+
+```bash
+# RDS 엔드포인트와 자격증명으로 연결
+mysql -h kdt-final-mysql.cjwmcufdhb4i.ap-northeast-2.rds.amazonaws.com \
+      -u admin \
+      -p \
+      < k8s/init-database.sql
+```
+
+### 방법 2: Bastion 서버에서 실행
+
+```bash
+# k8s 디렉토리로 이동
+cd k8s
+
+# SQL 파일 실행
+mysql -h ${RDS_ENDPOINT} \
+      -u ${DB_USERNAME} \
+      -p${DB_PASSWORD} \
+      < init-database.sql
+```
+
+**환경 변수 예시:**
+```bash
+export RDS_ENDPOINT=kdt-final-mysql.cjwmcufdhb4i.ap-northeast-2.rds.amazonaws.com
+export DB_USERNAME=admin
+export DB_PASSWORD=your_password
+```
+
+### 생성되는 테이블
+
+- `types`: 애완동물 타입 (cat, dog 등)
+- `owners`: 주인 정보
+- `pets`: 애완동물 정보
+- `vets`: 수의사 정보
+- `specialties`: 전문 분야
+- `vet_specialties`: 수의사-전문 분야 연관
+- `visits`: 방문 기록
 
 ## 배포 확인
 
@@ -78,13 +194,45 @@ kubectl get pods
 kubectl logs -f deployment/petclinic-api-gateway
 ```
 
+## 문제 해결
+
+### kubectl 연결 오류
+
+**오류 메시지:**
+```
+error: error validating data: failed to download openapi: Get "http://localhost:8080/openapi/v2?timeout=32s": dial tcp 127.0.0.1:8080: connect: connection refused
+```
+
+**해결 방법:**
+1. EKS 클러스터 연결 확인:
+   ```bash
+   aws eks update-kubeconfig --region ap-northeast-2 --name your-cluster-name
+   ```
+
+2. kubectl 연결 테스트:
+   ```bash
+   kubectl get nodes
+   ```
+
+3. kubeconfig 파일 확인:
+   ```bash
+   cat ~/.kube/config
+   ```
+
+4. AWS 자격증명 확인:
+   ```bash
+   aws sts get-caller-identity
+   ```
+
 ## 주의사항
 
-1. **Secret 파일**: `petclinic-secret.yaml`에는 실제 DB 자격증명이 포함되므로, Git에 커밋하기 전에 반드시 placeholder로 변경하세요.
+1. **kubectl 연결**: 배포 전에 반드시 `kubectl get nodes` 명령으로 EKS 클러스터 연결을 확인하세요.
 
-2. **환경 변수**: 배포 전에 모든 필수 환경 변수가 설정되었는지 확인하세요.
+2. **Secret 파일**: `petclinic-secret.yaml`에는 실제 DB 자격증명이 포함되므로, Git에 커밋하기 전에 반드시 placeholder로 변경하세요.
 
-3. **ECR 인증**: EKS 클러스터가 ECR에서 이미지를 pull할 수 있도록 IAM 역할이 올바르게 설정되어 있어야 합니다.
+3. **환경 변수**: 배포 전에 모든 필수 환경 변수가 설정되었는지 확인하세요.
 
-4. **RDS 접근**: EKS 노드의 보안 그룹이 RDS 인스턴스에 접근할 수 있도록 설정되어 있어야 합니다.
+4. **ECR 인증**: EKS 클러스터가 ECR에서 이미지를 pull할 수 있도록 IAM 역할이 올바르게 설정되어 있어야 합니다.
+
+5. **RDS 접근**: EKS 노드의 보안 그룹이 RDS 인스턴스에 접근할 수 있도록 설정되어 있어야 합니다.
 

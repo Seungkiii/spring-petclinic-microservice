@@ -15,25 +15,25 @@ spring:
             methods: POST
       routes:
         - id: vets-service
-          uri: http://vets-service:8080
+          uri: http://petclinic-vets:8080
           predicates:
             - Path=/api/vet/**
           filters:
             - StripPrefix=2
         - id: visits-service
-          uri: http://visits-service:8080
+          uri: http://petclinic-visits:8080
           predicates:
             - Path=/api/visit/**
           filters:
             - StripPrefix=2
         - id: customers-service
-          uri: http://customers-service:8080
+          uri: http://petclinic-customers:8080
           predicates:
             - Path=/api/customer/**
           filters:
             - StripPrefix=2
         - id: genai-service
-          uri: http://genai-service:8080
+          uri: http://petclinic-genai:8080
           predicates:
             - Path=/api/genai/**
           filters:
@@ -44,6 +44,11 @@ server:
   port: 8080
 
 management:
+  tracing:
+    enabled: false 
+  zipkin:
+    tracing:
+      endpoint: ""
   endpoints:
     web:
       exposure:

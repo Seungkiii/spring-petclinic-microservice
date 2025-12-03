@@ -34,11 +34,10 @@ echo "  ECR_REGISTRY=${ECR_REGISTRY}"
 echo "  RDS_ENDPOINT=${RDS_ENDPOINT}"
 echo ""
 
-# envsubst를 사용하여 환경 변수 치환
-# macOS에서는 gettext 패키지 설치 필요: brew install gettext
-if ! command -v envsubst &> /dev/null; then
-  echo "[ERROR] envsubst 명령을 찾을 수 없습니다." >&2
-  echo "macOS에서는 다음 명령으로 설치하세요: brew install gettext" >&2
+# kubectl 확인
+if ! command -v kubectl &> /dev/null; then
+  echo "[ERROR] kubectl 명령을 찾을 수 없습니다." >&2
+  echo "kubectl이 설치되어 있고 PATH에 포함되어 있는지 확인하세요." >&2
   exit 1
 fi
 
@@ -46,10 +45,35 @@ fi
 TEMP_DIR=$(mktemp -d)
 trap "rm -rf ${TEMP_DIR}" EXIT
 
+# 환경 변수 치환 방법 선택 (envsubst 우선, 없으면 sed 사용)
+if command -v envsubst &> /dev/null; then
+  echo "[INFO] envsubst를 사용하여 환경 변수 치환 중..."
+  USE_ENVSUBST=true
+else
+  echo "[WARN] envsubst를 찾을 수 없습니다. sed를 사용합니다." >&2
+  echo "[INFO] Linux에서 envsubst 설치: sudo apt-get install gettext-base (Ubuntu/Debian) 또는 sudo yum install gettext (RHEL/CentOS)" >&2
+  USE_ENVSUBST=false
+fi
+
 # 각 YAML 파일에 대해 환경 변수 치환
 for YAML_FILE in *.yaml; do
   OUTPUT_FILE="${TEMP_DIR}/${YAML_FILE}"
-  envsubst < "${YAML_FILE}" > "${OUTPUT_FILE}"
+  
+  # Secret 파일은 환경 변수 치환 불필요 (직접 수정 필요)
+  if [[ "${YAML_FILE}" == "petclinic-secret.yaml" ]]; then
+    cp "${YAML_FILE}" "${OUTPUT_FILE}"
+    echo "[INFO] ${YAML_FILE} 복사 완료 (환경 변수 치환 없음 - 실제 값으로 수정 필요)"
+    continue
+  fi
+  
+  if [[ "${USE_ENVSUBST}" == "true" ]]; then
+    # envsubst 사용 (권장)
+    envsubst < "${YAML_FILE}" > "${OUTPUT_FILE}"
+  else
+    # sed를 사용한 대체 방법
+    sed "s|\${ECR_REGISTRY}|${ECR_REGISTRY}|g; s|\${RDS_ENDPOINT}|${RDS_ENDPOINT}|g" "${YAML_FILE}" > "${OUTPUT_FILE}"
+  fi
+  
   echo "[INFO] ${YAML_FILE} 처리 완료"
 done
 
