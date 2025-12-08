@@ -22,6 +22,7 @@ import jakarta.validation.constraints.Min;
 import io.micrometer.core.annotation.Timed;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.http.HttpStatus;
 import org.springframework.samples.petclinic.visits.model.Visit;
 import org.springframework.samples.petclinic.visits.model.VisitRepository;
@@ -48,9 +49,11 @@ class VisitResource {
     private static final Logger log = LoggerFactory.getLogger(VisitResource.class);
 
     private final VisitRepository visitRepository;
+    private final RabbitTemplate rabbitTemplate;
 
-    VisitResource(VisitRepository visitRepository) {
+    VisitResource(VisitRepository visitRepository, RabbitTemplate rabbitTemplate) {
         this.visitRepository = visitRepository;
+        this.rabbitTemplate = rabbitTemplate;
     }
 
     @PostMapping("owners/*/pets/{petId}/visits")
@@ -61,7 +64,14 @@ class VisitResource {
 
         visit.setPetId(petId);
         log.info("Saving visit {}", visit);
-        return visitRepository.save(visit);
+        Visit savedVisit = visitRepository.save(visit);
+        
+        // RabbitMQ 이벤트 발행
+        String message = "Visit Created: [Pet ID: " + savedVisit.getPetId() + ", Date: " + savedVisit.getDate() + "]";
+        rabbitTemplate.convertAndSend("visit-events", message);
+        log.info("Published visit event to RabbitMQ: {}", message);
+        
+        return savedVisit;
     }
 
     @GetMapping("owners/*/pets/{petId}/visits")

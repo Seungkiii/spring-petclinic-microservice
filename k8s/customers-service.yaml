@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: customers-service
-          image: ${ECR_REGISTRY}/kdt-final-petclinic-customers:latest
+          image: ${ECR_REGISTRY}/kdt-final-petclinic-customers:v3.0.0
           imagePullPolicy: Always
           ports:
             - containerPort: 8080
@@ -29,7 +29,7 @@ spec:
                   name: petclinic-config
                   key: DB_HOST
             - name: SPRING_DATASOURCE_URL
-              value: jdbc:mysql://$(DB_HOST):3306/petclinic
+              value: jdbc:mysql://$(DB_HOST):3306/customers_db
             - name: SPRING_DATASOURCE_USERNAME
               valueFrom:
                 secretKeyRef:

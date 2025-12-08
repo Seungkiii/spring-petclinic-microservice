@@ -10,8 +10,8 @@ cd "${PROJECT_ROOT}"
 
 # 기본값 설정
 AWS_REGION="${AWS_REGION:-ap-northeast-2}"
-ECR_URI_PREFIX="${ECR_URI_PREFIX:-}"
-IMAGE_TAG="${IMAGE_TAG:-latest}"
+ECR_URI_PREFIX="206799461964.dkr.ecr.ap-northeast-2.amazonaws.com/kdt-final"
+IMAGE_TAG="${IMAGE_TAG:-V1.0.0}"
 
 # ECR_URI_PREFIX 확인
 if [[ -z "${ECR_URI_PREFIX}" ]]; then

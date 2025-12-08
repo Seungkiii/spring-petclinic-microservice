@@ -1,11 +1,10 @@
-CREATE DATABASE IF NOT EXISTS petclinic;
+CREATE DATABASE IF NOT EXISTS visits_db;
 
-USE petclinic;
+USE visits_db;
 
 CREATE TABLE IF NOT EXISTS visits (
   id INT(4) UNSIGNED NOT NULL AUTO_INCREMENT PRIMARY KEY,
   pet_id INT(4) UNSIGNED NOT NULL,
-  visit_date DATE,
-  description VARCHAR(8192),
-  FOREIGN KEY (pet_id) REFERENCES pets(id)
-) engine=InnoDB;
+  visit_date DATETIME(6) NOT NULL,
+  description VARCHAR(8192)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4;

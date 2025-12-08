@@ -2,6 +2,7 @@ package org.springframework.samples.petclinic.visits.web;
 
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.springframework.amqp.rabbit.core.RabbitTemplate;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
@@ -28,6 +29,9 @@ class VisitResourceTest {
 
     @MockBean
     VisitRepository visitRepository;
+
+    @MockBean
+    RabbitTemplate rabbitTemplate;
 
     @Test
     void shouldFetchVisits() throws Exception {
