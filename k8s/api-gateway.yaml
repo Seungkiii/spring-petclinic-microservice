@@ -23,23 +23,6 @@ spec:
           env:
             - name: SPRING_PROFILES_ACTIVE
               value: mysql
-            - name: DB_HOST
-              valueFrom:
-                configMapKeyRef:
-                  name: petclinic-config
-                  key: DB_HOST
-            - name: SPRING_DATASOURCE_URL
-              value: jdbc:mysql://$(DB_HOST):3306/petclinic
-            - name: SPRING_DATASOURCE_USERNAME
-              valueFrom:
-                secretKeyRef:
-                  name: petclinic-db-secret
-                  key: SPRING_DATASOURCE_USERNAME
-            - name: SPRING_DATASOURCE_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: petclinic-db-secret
-                  key: SPRING_DATASOURCE_PASSWORD
           readinessProbe:
             httpGet:
               path: /actuator/health
