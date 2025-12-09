@@ -1,5 +1,6 @@
 # Nginx를 사용하여 정적 파일 서빙
-FROM nginx:alpine
+# EKS는 x86_64 아키텍처를 사용하므로 플랫폼 명시
+FROM --platform=linux/amd64 nginx:alpine
 
 # 정적 파일들을 Nginx html 폴더로 복사
 # 빌드 컨텍스트가 프로젝트 루트인 경우
