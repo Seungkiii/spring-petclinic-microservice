@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: api-gateway
-          image: ${ECR_REGISTRY}/kdt-final-petclinic-gateway:v3.0.0
+          image: ${ECR_REGISTRY}/kdt-final-petclinic-gateway:v4.0.0
           imagePullPolicy: Always
           ports:
             - containerPort: 8080
