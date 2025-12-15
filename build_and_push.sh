@@ -10,18 +10,15 @@ cd "${PROJECT_ROOT}"
 
 # 기본값 설정
 AWS_REGION="${AWS_REGION:-ap-northeast-2}"
-ECR_URI_PREFIX="${ECR_URI_PREFIX:-YOUR_ACCOUNT_ID.dkr.ecr.ap-northeast-2.amazonaws.com/kdt-final}"
+ECR_REGISTRY="${ECR_REGISTRY:-YOUR_ACCOUNT_ID.dkr.ecr.ap-northeast-2.amazonaws.com}"
 IMAGE_TAG="${IMAGE_TAG:-V1.0.0}"
 
-# ECR_URI_PREFIX 확인
-if [[ -z "${ECR_URI_PREFIX}" ]]; then
-  echo "[ERROR] ECR_URI_PREFIX 환경 변수가 필요합니다." >&2
-  echo "예시: export ECR_URI_PREFIX=123456789012.dkr.ecr.ap-northeast-2.amazonaws.com/kdt-final" >&2
+# ECR_REGISTRY 확인
+if [[ -z "${ECR_REGISTRY}" ]]; then
+  echo "[ERROR] ECR_REGISTRY 환경 변수가 필요합니다." >&2
+  echo "예시: export ECR_REGISTRY=123456789012.dkr.ecr.ap-northeast-2.amazonaws.com" >&2
   exit 1
 fi
-
-# 레지스트리 도메인 추출 (로그인용)
-ECR_REGISTRY="$(echo "${ECR_URI_PREFIX}" | cut -d'/' -f1)"
 
 echo "[INFO] ${ECR_REGISTRY} 레지스트리에 로그인합니다 (리전: ${AWS_REGION})..."
 aws ecr get-login-password --region "${AWS_REGION}" \
@@ -29,7 +26,7 @@ aws ecr get-login-password --region "${AWS_REGION}" \
 
 # ------------------------------------------------------------------
 # [수정됨] Bash 3.2(macOS) 호환을 위해 일반 배열 사용
-# 형식: "로컬디렉토리명:ECR접미사"
+# 형식: "로컬디렉토리명:ECR이미지명"
 # ------------------------------------------------------------------
 SERVICES=(
   "spring-petclinic-api-gateway:petclinic-gateway"
@@ -44,14 +41,14 @@ SERVICES=(
 for ITEM in "${SERVICES[@]}"; do
   # 문자열 파싱 (매킨토시 호환)
   SERVICE_DIR="${ITEM%%:*}"   # 콜론 앞부분 (디렉토리)
-  IMAGE_SUFFIX="${ITEM##*:}"  # 콜론 뒷부분 (이미지명)
+  IMAGE_NAME="${ITEM##*:}"    # 콜론 뒷부분 (이미지명)
 
   # 로컬 이미지 태그 (빌드용)
-  LOCAL_IMAGE="${IMAGE_SUFFIX}:${IMAGE_TAG}"
+  LOCAL_IMAGE="${IMAGE_NAME}:${IMAGE_TAG}"
   
   # 원격 ECR 이미지 태그 (푸시용)
-  # ECR_URI_PREFIX 뒤에 서비스명 붙이기 (중간에 하이픈(-) 추가)
-  REMOTE_IMAGE="${ECR_URI_PREFIX}-${IMAGE_SUFFIX}:${IMAGE_TAG}"
+  # 새로운 형식: ECR_REGISTRY/petclinic-{service}
+  REMOTE_IMAGE="${ECR_REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG}"
 
   if [[ ! -d "${SERVICE_DIR}" ]]; then
     echo "[WARN] 디렉토리 '${SERVICE_DIR}'를 찾을 수 없습니다. 건너뜁니다."

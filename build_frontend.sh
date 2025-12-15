@@ -12,7 +12,7 @@ cd "$SCRIPT_DIR"
 IMAGE_TAG="${IMAGE_TAG:-v1.0.0}"
 ECR_REGISTRY="${ECR_REGISTRY:-YOUR_ACCOUNT_ID.dkr.ecr.ap-northeast-2.amazonaws.com}"
 AWS_REGION="${AWS_REGION:-ap-northeast-2}"
-IMAGE_NAME="kdt-final-petclinic-frontend"
+IMAGE_NAME="petclinic-frontend"
 FULL_IMAGE_NAME="${ECR_REGISTRY}/${IMAGE_NAME}:${IMAGE_TAG}"
 
 echo "=========================================="

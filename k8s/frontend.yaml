@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: frontend
-          image: ${ECR_REGISTRY}/kdt-final-petclinic-frontend:${IMAGE_TAG:-v1.0.0}
+          image: ${ECR_REGISTRY}/petclinic-frontend:${IMAGE_TAG:-v1.0.0}
           imagePullPolicy: Always
           ports:
             - containerPort: 80

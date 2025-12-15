@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: visits-service
-          image: ${ECR_REGISTRY}/kdt-final-petclinic-visits:v4.0.0
+          image: ${ECR_REGISTRY}/petclinic-visits:${IMAGE_TAG:-v4.0.0}
           imagePullPolicy: Always
           ports:
             - containerPort: 8080
@@ -34,12 +34,12 @@ spec:
               valueFrom:
                 secretKeyRef:
                   name: petclinic-db-secret
-                  key: SPRING_DATASOURCE_USERNAME
+                  key: VISITS_DATASOURCE_USERNAME
             - name: SPRING_DATASOURCE_PASSWORD
               valueFrom:
                 secretKeyRef:
                   name: petclinic-db-secret
-                  key: SPRING_DATASOURCE_PASSWORD
+                  key: VISITS_DATASOURCE_PASSWORD
           readinessProbe:
             httpGet:
               path: /actuator/health
