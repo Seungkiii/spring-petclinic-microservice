@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: frontend
-          image: ${ECR_REGISTRY}/petclinic-frontend:${IMAGE_TAG:-v1.0.0}
+          image: <YOUR_AWS_ACCOUNT_ID>.dkr.ecr.ap-northeast-2.amazonaws.com/petclinic-frontend:v5.0.1
           imagePullPolicy: Always
           ports:
             - containerPort: 80
@@ -48,7 +48,7 @@ metadata:
   labels:
     app: petclinic-frontend
 spec:
-  type: LoadBalancer
+  type: ClusterIP
   selector:
     app: petclinic-frontend
   ports:

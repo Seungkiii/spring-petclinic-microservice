@@ -16,7 +16,7 @@ spec:
     spec:
       containers:
         - name: api-gateway
-          image: ${ECR_REGISTRY}/petclinic-gateway:${IMAGE_TAG:-v4.0.0}
+          image: <YOUR_AWS_ACCOUNT_ID>.dkr.ecr.ap-northeast-2.amazonaws.com/petclinic-gateway:v5.0.0
           imagePullPolicy: Always
           ports:
             - containerPort: 8080
@@ -35,6 +35,13 @@ spec:
               port: 8080
             initialDelaySeconds: 30
             periodSeconds: 15
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "200m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
 ---
 apiVersion: v1
 kind: Service
