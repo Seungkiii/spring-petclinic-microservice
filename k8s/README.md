@@ -57,16 +57,43 @@ kubectl get nodes
 ```bash
 export ECR_REGISTRY=123456789012.dkr.ecr.ap-northeast-2.amazonaws.com
 export RDS_ENDPOINT=your-rds-endpoint.rds.amazonaws.com
+export IMAGE_TAG=v5.0.0  # 선택사항, 기본값: v4.0.0
 ```
 
 ### 2. Secret 파일 수정
 
-`petclinic-secret.yaml` 파일을 열어 실제 DB 자격증명으로 수정:
+`petclinic-secret.yaml` 파일을 열어 각 서비스별 DB 자격증명으로 수정:
 
 ```yaml
 stringData:
-  SPRING_DATASOURCE_USERNAME: your_actual_username
-  SPRING_DATASOURCE_PASSWORD: your_actual_password
+  # Customers Service DB credentials
+  CUSTOMERS_DATASOURCE_USERNAME: customers_user
+  CUSTOMERS_DATASOURCE_PASSWORD: your_customers_password
+  # Vets Service DB credentials
+  VETS_DATASOURCE_USERNAME: vets_user
+  VETS_DATASOURCE_PASSWORD: your_vets_password
+  # Visits Service DB credentials
+  VISITS_DATASOURCE_USERNAME: visits_user
+  VISITS_DATASOURCE_PASSWORD: your_visits_password
+```
+
+**중요:** 각 서비스는 자신의 데이터베이스에 대한 전용 사용자를 사용합니다. RDS에서 각 사용자에게 해당 데이터베이스에 대한 권한을 부여해야 합니다:
+
+```sql
+-- Customers DB 사용자 생성 및 권한 부여
+CREATE USER 'customers_user'@'%' IDENTIFIED BY 'your_customers_password';
+GRANT ALL PRIVILEGES ON customers_db.* TO 'customers_user'@'%';
+FLUSH PRIVILEGES;
+
+-- Vets DB 사용자 생성 및 권한 부여
+CREATE USER 'vets_user'@'%' IDENTIFIED BY 'your_vets_password';
+GRANT ALL PRIVILEGES ON vets_db.* TO 'vets_user'@'%';
+FLUSH PRIVILEGES;
+
+-- Visits DB 사용자 생성 및 권한 부여
+CREATE USER 'visits_user'@'%' IDENTIFIED BY 'your_visits_password';
+GRANT ALL PRIVILEGES ON visits_db.* TO 'visits_user'@'%';
+FLUSH PRIVILEGES;
 ```
 
 ### 3. 배포 실행
@@ -93,8 +120,8 @@ cd k8s
 **Bastion 서버에서 사용 예시:**
 ```bash
 # 환경 변수 설정
-export ECR_REGISTRY=206799461964.dkr.ecr.ap-northeast-2.amazonaws.com
-export RDS_ENDPOINT=kdt-final-mysql.cjwmcufdhb4i.ap-northeast-2.rds.amazonaws.com
+export ECR_REGISTRY=YOUR_ACCOUNT_ID.dkr.ecr.ap-northeast-2.amazonaws.com
+export RDS_ENDPOINT=your-rds-endpoint.rds.amazonaws.com
 
 # 배포 실행
 cd k8s
@@ -107,8 +134,8 @@ cd k8s
 
 ```bash
 # 1. 환경 변수 설정
-export ECR_REGISTRY=206799461964.dkr.ecr.ap-northeast-2.amazonaws.com
-export RDS_ENDPOINT=kdt-final-mysql.cjwmcufdhb4i.ap-northeast-2.rds.amazonaws.com
+export ECR_REGISTRY=YOUR_ACCOUNT_ID.dkr.ecr.ap-northeast-2.amazonaws.com
+export RDS_ENDPOINT=your-rds-endpoint.rds.amazonaws.com
 
 # 2. k8s 디렉토리로 이동
 cd k8s
@@ -145,10 +172,10 @@ envsubst < visits-service.yaml | kubectl apply -f -
 
 ```bash
 # RDS 엔드포인트와 자격증명으로 연결
-mysql -h kdt-final-mysql.cjwmcufdhb4i.ap-northeast-2.rds.amazonaws.com \
-      -u admin \
+mysql -h your-rds-endpoint.rds.amazonaws.com \
+      -u your_username \
       -p \
-      < k8s/init-database.sql
+      < k8s/init-customers-db.sql
 ```
 
 ### 방법 2: Bastion 서버에서 실행
@@ -166,8 +193,8 @@ mysql -h ${RDS_ENDPOINT} \
 
 **환경 변수 예시:**
 ```bash
-export RDS_ENDPOINT=kdt-final-mysql.cjwmcufdhb4i.ap-northeast-2.rds.amazonaws.com
-export DB_USERNAME=admin
+export RDS_ENDPOINT=your-rds-endpoint.rds.amazonaws.com
+export DB_USERNAME=your_username
 export DB_PASSWORD=your_password
 ```
 

@@ -16,30 +16,13 @@ spec:
     spec:
       containers:
         - name: api-gateway
-          image: ${ECR_REGISTRY}/kdt-final-petclinic-gateway:latest
+          image: <YOUR_AWS_ACCOUNT_ID>.dkr.ecr.ap-northeast-2.amazonaws.com/petclinic-gateway:v5.0.0
           imagePullPolicy: Always
           ports:
             - containerPort: 8080
           env:
             - name: SPRING_PROFILES_ACTIVE
               value: mysql
-            - name: DB_HOST
-              valueFrom:
-                configMapKeyRef:
-                  name: petclinic-config
-                  key: DB_HOST
-            - name: SPRING_DATASOURCE_URL
-              value: jdbc:mysql://$(DB_HOST):3306/petclinic
-            - name: SPRING_DATASOURCE_USERNAME
-              valueFrom:
-                secretKeyRef:
-                  name: petclinic-db-secret
-                  key: SPRING_DATASOURCE_USERNAME
-            - name: SPRING_DATASOURCE_PASSWORD
-              valueFrom:
-                secretKeyRef:
-                  name: petclinic-db-secret
-                  key: SPRING_DATASOURCE_PASSWORD
           readinessProbe:
             httpGet:
               path: /actuator/health
@@ -52,6 +35,13 @@ spec:
               port: 8080
             initialDelaySeconds: 30
             periodSeconds: 15
+          resources:
+            requests:
+              memory: "256Mi"
+              cpu: "200m"
+            limits:
+              memory: "512Mi"
+              cpu: "500m"
 ---
 apiVersion: v1
 kind: Service

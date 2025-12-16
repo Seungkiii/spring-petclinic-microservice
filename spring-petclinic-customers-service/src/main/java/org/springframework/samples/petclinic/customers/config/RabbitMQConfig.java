@@ -13,10 +13,23 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-package org.springframework.samples.petclinic.api.dto;
+package org.springframework.samples.petclinic.customers.config;
+
+import org.springframework.amqp.core.Queue;
+import org.springframework.context.annotation.Bean;
+import org.springframework.context.annotation.Configuration;
 
 /**
- * @author Maciej Szarlinski
+ * RabbitMQ Configuration for Customers Service
+ * 
+ * @author Spring PetClinic Team
  */
-public record PetType(Integer id, String name) {
+@Configuration
+public class RabbitMQConfig {
+
+    @Bean
+    public Queue visitEventsQueue() {
+        return new Queue("visit-events", false);
+    }
 }
+

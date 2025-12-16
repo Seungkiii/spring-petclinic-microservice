@@ -70,8 +70,9 @@ for YAML_FILE in *.yaml; do
     # envsubst 사용 (권장)
     envsubst < "${YAML_FILE}" > "${OUTPUT_FILE}"
   else
-    # sed를 사용한 대체 방법
-    sed "s|\${ECR_REGISTRY}|${ECR_REGISTRY}|g; s|\${RDS_ENDPOINT}|${RDS_ENDPOINT}|g" "${YAML_FILE}" > "${OUTPUT_FILE}"
+    # sed를 사용한 대체 방법 (IMAGE_TAG도 처리)
+    IMAGE_TAG_VALUE="${IMAGE_TAG:-v4.0.0}"
+    sed "s|\${ECR_REGISTRY}|${ECR_REGISTRY}|g; s|\${RDS_ENDPOINT}|${RDS_ENDPOINT}|g; s|\${IMAGE_TAG:-v4.0.0}|${IMAGE_TAG_VALUE}|g" "${YAML_FILE}" > "${OUTPUT_FILE}"
   fi
   
   echo "[INFO] ${YAML_FILE} 처리 완료"
