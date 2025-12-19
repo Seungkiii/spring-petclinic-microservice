@@ -66,11 +66,11 @@ jobs:
         ACR_REGISTRY: ${{ secrets.ACR_LOGIN_SERVER }}
         IMAGE_TAG: ${{ steps.meta.outputs.TAG }}
       run: |
-        cd ${{ env.DOCKER_DIR }}
+        # cd ${{ env.DOCKER_DIR }}
         
         # 이미지 빌드
-        docker build -t $SERVICE_NAME:$IMAGE_TAG .
-
+        docker build --platform linux/amd64 -t $SERVICE_NAME:$IMAGE_TAG -f ${{ env.DOCKER_DIR }}/Dockerfile .
+        
         # [AWS ECR] 태그 달고 푸시
         docker tag $SERVICE_NAME:$IMAGE_TAG $ECR_REGISTRY/$SERVICE_NAME:$IMAGE_TAG
         docker push $ECR_REGISTRY/$SERVICE_NAME:$IMAGE_TAG
