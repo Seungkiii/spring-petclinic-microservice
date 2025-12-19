@@ -13,6 +13,10 @@ spec:
     metadata:
       labels:
         app: petclinic-visits
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/path: "/actuator/prometheus"
+        prometheus.io/port: "8080"
     spec:
       containers:
         - name: visits-service
@@ -58,11 +62,11 @@ spec:
             failureThreshold: 3
           resources:
             requests:
-              memory: "256Mi"
-              cpu: "200m"
-            limits:
               memory: "512Mi"
-              cpu: "500m"
+              cpu: "400m"
+            limits:
+              memory: "1Gi"
+              cpu: "800m"
 ---
 apiVersion: v1
 kind: Service
@@ -75,7 +79,8 @@ spec:
   selector:
     app: petclinic-visits
   ports:
-    - protocol: TCP
+    - name: http
+      protocol: TCP
       port: 8080
       targetPort: 8080
 

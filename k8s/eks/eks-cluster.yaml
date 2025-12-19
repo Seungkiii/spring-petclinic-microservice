@@ -26,8 +26,8 @@ vpc:
 
 # 관리형 노드 그룹 (EC2 Worker Nodes)
 managedNodeGroups:
-  - name: petclinic-ng-general
-    instanceType: t3.medium        # 2 vCPU, 4GB RAM (가성비)
+  - name: petclinic-ng-general-v1
+    instanceType: t3.large        # 2 vCPU, 4GB RAM (가성비)
     minSize: 2
     desiredCapacity: 2             # [비용] 평소엔 2대로 유지
     maxSize: 5                     # 부하 시 최대 5대까지 확장

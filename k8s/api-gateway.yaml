@@ -13,6 +13,10 @@ spec:
     metadata:
       labels:
         app: petclinic-api-gateway
+      annotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/path: "/actuator/prometheus"
+        prometheus.io/port: "8080"
     spec:
       containers:
         - name: api-gateway
@@ -37,11 +41,11 @@ spec:
             periodSeconds: 15
           resources:
             requests:
-              memory: "256Mi"
-              cpu: "200m"
-            limits:
               memory: "512Mi"
-              cpu: "500m"
+              cpu: "400m"
+            limits:
+              memory: "1Gi"
+              cpu: "800m"
 ---
 apiVersion: v1
 kind: Service
@@ -54,7 +58,8 @@ spec:
   selector:
     app: petclinic-api-gateway
   ports:
-    - protocol: TCP
+    - name: http
+      protocol: TCP
       port: 8080
       targetPort: 8080
 

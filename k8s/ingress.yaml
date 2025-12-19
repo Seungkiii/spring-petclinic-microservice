@@ -23,9 +23,8 @@ metadata:
     # 리스너 포트
     alb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}]'
     
-    # Path Rewrite: /petclinic을 제거하여 Frontend가 루트 경로로 인식하도록 함
-    # 이렇게 하면 /petclinic/webjars/...가 /webjars/...로 변환되어 정적 리소스가 정상적으로 로드됨
-    alb.ingress.kubernetes.io/rewrite-target: /
+    # Path Rewrite 제거: nginx에서 직접 /petclinic 경로를 처리하도록 함
+    # alb.ingress.kubernetes.io/rewrite-target: /
     
     # 태그
     alb.ingress.kubernetes.io/tags: Environment=dev,Project=petclinic-msa
