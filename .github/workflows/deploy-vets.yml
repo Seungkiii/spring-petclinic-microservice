@@ -1,0 +1,74 @@
+name: Deploy Vets Service (Dual Registry)
+
+on:
+  push:
+    branches: [ "main" ]
+    # [핵심] 오직 'spring-petclinic-vets' 폴더가 변경되었을 때만 트리거됨
+    paths:
+      - 'spring-petclinic-vets-service/**'
+      - '.github/workflows/deploy-vets.yml'
+
+env:
+  # 서비스 이름 정의 (이것만 바꾸면 다른 서비스에도 복붙 가능)
+  SERVICE_NAME: vets-service
+  DOCKER_DIR: spring-petclinic-vets-service # Dockerfile이 있는 위치
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Set up JDK 17
+      uses: actions/setup-java@v4
+      with:
+        java-version: '17'
+        distribution: 'temurin'
+        cache: maven
+
+    # 1. Maven 빌드 (테스트 포함)
+    - name: Build with Maven
+      run: |
+        cd ${{ env.DOCKER_DIR }}
+        ./mvnw clean package -DskipTests=false
+
+    # 2. AWS ECR 로그인
+    - name: Login to Amazon ECR
+      uses: aws-actions/amazon-ecr-login@v2
+      id: login-ecr
+
+    # 3. Azure ACR 로그인
+    - name: Login to Azure ACR
+      uses: azure/docker-login@v1
+      with:
+        login-server: ${{ secrets.ACR_LOGIN_SERVER }}
+        username: ${{ secrets.ACR_USERNAME }}
+        password: ${{ secrets.ACR_PASSWORD }}
+
+    # 4. 이미지 태그 생성 (Git 해시 사용) -> 버전 관리의 핵심
+    - name: Calculate Image Tag
+      id: meta
+      run: echo "TAG=sha-$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+
+    # 5. 도커 빌드 & 태깅 (AWS용, Azure용 각각 태깅)
+    - name: Build and Push Docker Images
+      env:
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        ACR_REGISTRY: ${{ secrets.ACR_LOGIN_SERVER }}
+        IMAGE_TAG: ${{ steps.meta.outputs.TAG }}
+      run: |
+        cd ${{ env.DOCKER_DIR }}
+        
+        # 이미지 빌드
+        docker build -t $SERVICE_NAME:$IMAGE_TAG .
+
+        # [AWS ECR] 태그 달고 푸시
+        docker tag $SERVICE_NAME:$IMAGE_TAG $ECR_REGISTRY/$SERVICE_NAME:$IMAGE_TAG
+        docker push $ECR_REGISTRY/$SERVICE_NAME:$IMAGE_TAG
+        
+        # [Azure ACR] 태그 달고 푸시 (DR용)
+        docker tag $SERVICE_NAME:$IMAGE_TAG $ACR_REGISTRY/$SERVICE_NAME:$IMAGE_TAG
+        docker push $ACR_REGISTRY/$SERVICE_NAME:$IMAGE_TAG
+        
+        echo "✅ Dual Push Complete!"
