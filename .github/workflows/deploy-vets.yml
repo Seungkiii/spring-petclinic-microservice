@@ -10,7 +10,7 @@ on:
 
 env:
   # 서비스 이름 정의 (이것만 바꾸면 다른 서비스에도 복붙 가능)
-  SERVICE_NAME: vets-service
+  ECR_NAME: petclinic-vets
   DOCKER_DIR: spring-petclinic-vets-service # Dockerfile이 있는 위치
 
 jobs:
@@ -69,14 +69,14 @@ jobs:
         # cd ${{ env.DOCKER_DIR }}
         
         # 이미지 빌드
-        docker build --platform linux/amd64 -t $SERVICE_NAME:$IMAGE_TAG -f ${{ env.DOCKER_DIR }}/Dockerfile .
-        
+        docker build --platform linux/amd64 -t $ECR_NAME:$IMAGE_TAG -f ${{ env.DOCKER_DIR }}/Dockerfile .
+
         # [AWS ECR] 태그 달고 푸시
-        docker tag $SERVICE_NAME:$IMAGE_TAG $ECR_REGISTRY/$SERVICE_NAME:$IMAGE_TAG
-        docker push $ECR_REGISTRY/$SERVICE_NAME:$IMAGE_TAG
+        docker tag $ECR_NAME:$IMAGE_TAG $ECR_REGISTRY/$ECR_NAME:$IMAGE_TAG
+        docker push $ECR_REGISTRY/$ECR_NAME:$IMAGE_TAG
         
         # [Azure ACR] 태그 달고 푸시 (DR용)
-        docker tag $SERVICE_NAME:$IMAGE_TAG $ACR_REGISTRY/$SERVICE_NAME:$IMAGE_TAG
-        docker push $ACR_REGISTRY/$SERVICE_NAME:$IMAGE_TAG
+        docker tag $ECR_NAME:$IMAGE_TAG $ACR_REGISTRY/$ECR_NAME:$IMAGE_TAG
+        docker push $ACR_REGISTRY/$ECR_NAME:$IMAGE_TAG
         
         echo "✅ Dual Push Complete!"
