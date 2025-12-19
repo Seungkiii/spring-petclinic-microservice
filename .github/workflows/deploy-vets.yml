@@ -30,8 +30,9 @@ jobs:
     # 1. Maven 빌드 (테스트 포함)
     - name: Build with Maven
       run: |
+        chmod +x mvnw
         cd ${{ env.DOCKER_DIR }}
-        ./mvnw clean package -DskipTests=false
+        ${{ github.workspace }}/mvnw clean package -DskipTests=false
 
     # 2. AWS ECR 로그인
     - name: Login to Amazon ECR
