@@ -4,12 +4,12 @@ on:
   push:
     branches: [ "main" ]
     paths:
-      - 'spring-petclinic-vets-service/**'
-      - '.github/workflows/deploy-vets.yml'
+      - 'spring-petclinic-visits-service/**'
+      - '.github/workflows/deploy-visits.yml'
 
 env:
-  ECR_NAME: petclinic-vets
-  DOCKER_DIR: spring-petclinic-vets-service
+  ECR_NAME: petclinic-visits
+  DOCKER_DIR: spring-petclinic-visits-service
 
 jobs:
   build-and-push:
@@ -82,3 +82,4 @@ jobs:
         echo "✅ Dual Push Complete!"
         echo "AWS ECR: $ECR_REGISTRY/$ECR_NAME:$IMAGE_TAG"
         echo "Azure ACR: $ACR_REGISTRY/$ECR_NAME:$IMAGE_TAG"
+        
