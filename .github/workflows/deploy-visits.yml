@@ -82,4 +82,30 @@ jobs:
         echo "✅ Dual Push Complete!"
         echo "AWS ECR: $ECR_REGISTRY/$ECR_NAME:$IMAGE_TAG"
         echo "Azure ACR: $ACR_REGISTRY/$ECR_NAME:$IMAGE_TAG"
+
+    - name: Update Kubernetes Manifest
+      env:
+        GH_TOKEN: ${{ secrets.GH_TOKEN }}
+        GITOPS_REPO: Seungkiii/petclinic-gitops
+        IMAGE_TAG: ${{ steps.meta.outputs.TAG }}
+        ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+      run: |
+        # 1. GitOps 리포지토리 클론
+        git clone https://${GH_TOKEN}@github.com/${GITOPS_REPO}.git
+        cd petclinic-gitops
         
+        # 2. Git 설정
+        git config user.name "github-actions"
+        git config user.email "github-actions@github.com"
+        
+        # 3. YAML 파일 수정 (sed 명령어로 이미지 태그 교체)
+        sed -i "s|image: .*|image: $ECR_REGISTRY/$ECR_NAME:$IMAGE_TAG|g" visits-service.yaml
+        
+        # 4. 변경 사항 확인 및 푸시
+        if git diff --quiet; then
+          echo "No changes to commit"
+        else
+          git add visits-service.yaml
+          git commit -m "Update visits-service image to $IMAGE_TAG"
+          git push origin main
+        fi
