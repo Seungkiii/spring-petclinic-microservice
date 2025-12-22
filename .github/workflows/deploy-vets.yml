@@ -3,15 +3,13 @@ name: Deploy Vets Service (Dual Registry)
 on:
   push:
     branches: [ "main" ]
-    # [핵심] 오직 'spring-petclinic-vets' 폴더가 변경되었을 때만 트리거됨
     paths:
       - 'spring-petclinic-vets-service/**'
       - '.github/workflows/deploy-vets.yml'
 
 env:
-  # 서비스 이름 정의 (이것만 바꾸면 다른 서비스에도 복붙 가능)
   ECR_NAME: petclinic-vets
-  DOCKER_DIR: spring-petclinic-vets-service # Dockerfile이 있는 위치
+  DOCKER_DIR: spring-petclinic-vets-service
 
 jobs:
   build-and-push:
@@ -27,7 +25,6 @@ jobs:
         distribution: 'temurin'
         cache: maven
 
-    # 1. Maven 빌드 (테스트 포함)
     - name: Build with Maven
       run: |
         chmod +x mvnw
@@ -41,12 +38,14 @@ jobs:
         aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
         aws-region: ${{ secrets.AWS_REGION }}
 
-    # 2. AWS ECR 로그인
+    # [수정 1] ECR 로그인 - registry를 output으로 저장
     - name: Login to Amazon ECR
-      uses: aws-actions/amazon-ecr-login@v2
       id: login-ecr
+      uses: aws-actions/amazon-ecr-login@v2
+    - name: Verify AWS Identity
+      run: aws sts get-caller-identity
 
-    # 3. Azure ACR 로그인
+    # [수정 2] Azure ACR 로그인
     - name: Login to Azure ACR
       uses: azure/docker-login@v1
       with:
@@ -54,31 +53,32 @@ jobs:
         username: ${{ secrets.ACR_USERNAME }}
         password: ${{ secrets.ACR_PASSWORD }}
 
-    # 4. 이미지 태그 생성 (Git 해시 사용) -> 버전 관리의 핵심
     - name: Calculate Image Tag
       id: meta
       run: echo "TAG=sha-$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
 
-    # 5. 도커 빌드 & 태깅 (AWS용, Azure용 각각 태깅)
+    # [수정 3] 빌드 & 푸시 - ECR Registry 환경변수 사용
     - name: Build and Push Docker Images
       env:
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
         ACR_REGISTRY: ${{ secrets.ACR_LOGIN_SERVER }}
         IMAGE_TAG: ${{ steps.meta.outputs.TAG }}
+        AWS_REGION: ${{ secrets.AWS_REGION }}
       run: |
-        # cd ${{ env.DOCKER_DIR }}
-        
-        # 이미지 빌드
+        echo "Building image..."
         docker build --platform linux/amd64 -t $ECR_NAME:$IMAGE_TAG -f ${{ env.DOCKER_DIR }}/Dockerfile .
-
-        # [AWS ECR] 태그 달고 푸시
+        
+        echo "Pushing to AWS ECR..."
+        # ECR 재로그인 (명시적)
+        aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REGISTRY
+        
         docker tag $ECR_NAME:$IMAGE_TAG $ECR_REGISTRY/$ECR_NAME:$IMAGE_TAG
         docker push $ECR_REGISTRY/$ECR_NAME:$IMAGE_TAG
         
-        # [Azure ACR] 태그 달고 푸시 (DR용)
+        echo "Pushing to Azure ACR..."
         docker tag $ECR_NAME:$IMAGE_TAG $ACR_REGISTRY/$ECR_NAME:$IMAGE_TAG
         docker push $ACR_REGISTRY/$ECR_NAME:$IMAGE_TAG
         
         echo "✅ Dual Push Complete!"
-
-        
+        echo "AWS ECR: $ECR_REGISTRY/$ECR_NAME:$IMAGE_TAG"
+        echo "Azure ACR: $ACR_REGISTRY/$ECR_NAME:$IMAGE_TAG"
