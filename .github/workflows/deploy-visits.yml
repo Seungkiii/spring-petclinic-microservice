@@ -107,8 +107,8 @@ jobs:
         # Deployment의 별칭(placeholder)을 찾아서 Tag만 쏙 바꿉니다.
         # newName(AVP 경로)은 그대로 유지됩니다.
         cd $TARGET_DIR
-        kustomize edit set image petclinic-visits-image=:$IMAGE_TAG
-        
+        kustomize edit set image petclinic-visits-image=:${IMAGE_TAG}
+                
         # 확인 및 푸시
         cat kustomization.yaml
         
