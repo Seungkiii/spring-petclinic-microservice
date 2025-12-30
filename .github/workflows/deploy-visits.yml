@@ -121,3 +121,4 @@ jobs:
           git commit -m "Update visits-service tag to $IMAGE_TAG"
           git push origin main
         fi
+        
