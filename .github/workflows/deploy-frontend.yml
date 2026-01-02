@@ -73,6 +73,8 @@ jobs:
         GITOPS_REPO: Seungkiii/petclinic-gitops
         IMAGE_TAG: ${{ steps.meta.outputs.TAG }}
         ECR_REGISTRY: ${{ steps.login-ecr.outputs.registry }}
+        TARGET_DIR: apps/frontend-service/templates/frontend.yaml
+
       run: |
         # 1. GitOps 리포지토리 클론
         git clone https://${GH_TOKEN}@github.com/${GITOPS_REPO}.git
@@ -83,13 +85,16 @@ jobs:
         git config user.email "github-actions@github.com"
         
         # 3. YAML 파일 수정 (sed 명령어로 이미지 태그 교체)
-        sed -i "s|image: .*|image: $ECR_REGISTRY/$ECR_NAME:$IMAGE_TAG|g" frontend.yaml
-        
+        sed -i "s|\(petclinic-frontend:\).*|\1${IMAGE_TAG}|" $TARGET_DIR
+
+        echo "✅ Updated image tag in $TARGET_DIR:"
+        grep "image:" $TARGET_DIR | grep "petclinic-frontend"
+
         # 4. 변경 사항 확인 및 푸시
         if git diff --quiet; then
           echo "No changes to commit"
         else
-          git add frontend.yaml
+          git add $TARGET_DIR
           git commit -m "Update frontend image to $IMAGE_TAG"
           git push origin main
         fi
